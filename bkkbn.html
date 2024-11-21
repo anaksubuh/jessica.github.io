@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Keluarga - Lihat Data</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        select, input, button {
+            padding: 10px;
+            margin: 5px 0;
+            width: 200px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        .container {
+            margin-top: 20px;
+        }
+        .form-container {
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Data Keluarga Berdasarkan Kelurahan, RW, dan RT</h1>
+
+    <!-- Pilihan Kelurahan -->
+    <div class="form-container">
+        <h3>Pilih Lokasi</h3>
+        <label for="kelurahan">Kelurahan:</label>
+        <select id="kelurahan" onchange="updateRWOptions()">
+            <option value="WATES">WATES</option>
+            <option value="KERAMAT UTARA">KERAMAT UTARA</option>
+            <option value="KERAMAT SELATAN">KERAMAT SELATAN</option>
+            <option value="KEDUNGSARI">KEDUNGSARI</option>
+            <option value="POTROBANGSAN">POTROBANGSAN</option>
+        </select>
+
+        <label for="rw">RW:</label>
+        <select id="rw" onchange="updateRTOptions()"></select>
+
+        <label for="rt">RT:</label>
+        <select id="rt" onchange="loadData()"></select>
+    </div>
+
+    <!-- Tambah/Edit Data Keluarga -->
+    <div class="form-container">
+        <h3>Tambah/Edit Data Keluarga</h3>
+        <label for="namaSuami">Nama Suami:</label>
+        <input type="text" id="namaSuami" placeholder="Masukkan Nama Suami">
+
+        <label for="nikSuami">NIK Suami:</label>
+        <input type="text" id="nikSuami" placeholder="Masukkan NIK Suami">
+
+        <label for="namaIstri">Nama Istri:</label>
+        <input type="text" id="namaIstri" placeholder="Masukkan Nama Istri">
+
+        <label for="nikIstri">NIK Istri:</label>
+        <input type="text" id="nikIstri" placeholder="Masukkan NIK Istri">
+
+        <label for="tglLahirIstri">Tanggal Lahir Istri:</label>
+        <input type="date" id="tglLahirIstri">
+
+        <label for="umurIstri">Umur Istri:</label>
+        <input type="number" id="umurIstri" placeholder="Masukkan Umur">
+
+        <label for="jumlahAnak">Jumlah Anak:</label>
+        <input type="number" id="jumlahAnak" placeholder="Jumlah Anak">
+
+        <label for="statusKb">Status KB:</label>
+        <select id="statusKb">
+            <option value="MOW">MOW</option>
+            <option value="MOP">MOP</option>
+            <option value="IMP">IMP</option>
+            <option value="S">S</option>
+            <option value="P">P</option>
+            <option value="K">K</option>
+            <option value="I">I</option>
+        </select>
+
+        <label for="bulan">Bulan:</label>
+        <input type="text" id="bulan" placeholder="Bulan (Contoh: Januari)">
+
+        <button onclick="addData()">Simpan Data</button>
+    </div>
+
+    <!-- Tabel Data Keluarga -->
+    <div class="container">
+        <table id="dataTable">
+            <thead>
+                <tr>
+                    <th>Nama Suami</th>
+                    <th>NIK Suami</th>
+                    <th>Nama Istri</th>
+                    <th>NIK Istri</th>
+                    <th>Tanggal Lahir Istri</th>
+                    <th>Umur Istri</th>
+                    <th>Jumlah Anak</th>
+                    <th>Status KB</th>
+                    <th>Bulan</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Data akan dimuat di sini -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        let editIndex = null; // Variabel global untuk menyimpan indeks data yang sedang diedit
+
+        function updateRWOptions() {
+            const rwSelect = document.getElementById("rw");
+            rwSelect.innerHTML = "";
+            for (let i = 1; i <= 15; i++) {
+                const option = document.createElement("option");
+                option.value = `RW ${i}`;
+                option.textContent = `RW ${i}`;
+                rwSelect.appendChild(option);
+            }
+            updateRTOptions();
+        }
+
+        function updateRTOptions() {
+            const rtSelect = document.getElementById("rt");
+            rtSelect.innerHTML = "";
+            for (let i = 1; i <= 20; i++) {
+                const option = document.createElement("option");
+                option.value = `RT ${i}`;
+                option.textContent = `RT ${i}`;
+                rtSelect.appendChild(option);
+            }
+            loadData();
+        }
+
+        function addData() {
+            const kelurahan = document.getElementById("kelurahan").value;
+            const rw = document.getElementById("rw").value;
+            const rt = document.getElementById("rt").value;
+            const storageKey = `${kelurahan}/${rw}/${rt}`;
+
+            const newData = {
+                namaSuami: document.getElementById("namaSuami").value,
+                nikSuami: document.getElementById("nikSuami").value,
+                namaIstri: document.getElementById("namaIstri").value,
+                nikIstri: document.getElementById("nikIstri").value,
+                tglLahirIstri: document.getElementById("tglLahirIstri").value,
+                umurIstri: document.getElementById("umurIstri").value,
+                jumlahAnak: document.getElementById("jumlahAnak").value,
+                statusKb: document.getElementById("statusKb").value,
+                bulan: document.getElementById("bulan").value,
+            };
+
+            let data = JSON.parse(localStorage.getItem(storageKey)) || [];
+
+            if (editIndex !== null) {
+                // Update data pada indeks yang sedang diedit
+                data[editIndex] = newData;
+                editIndex = null; // Reset mode edit
+            } else {
+                // Tambah data baru
+                data.push(newData);
+            }
+
+            localStorage.setItem(storageKey, JSON.stringify(data));
+            clearForm();
+            loadData();
+        }
+
+        function editData(index) {
+            const kelurahan = document.getElementById("kelurahan").value;
+            const rw = document.getElementById("rw").value;
+            const rt = document.getElementById("rt").value;
+            const storageKey = `${kelurahan}/${rw}/${rt}`;
+            const data = JSON.parse(localStorage.getItem(storageKey)) || [];
+
+            const item = data[index];
+            document.getElementById("namaSuami").value = item.namaSuami;
+            document.getElementById("nikSuami").value = item.nikSuami;
+            document.getElementById("namaIstri").value = item.namaIstri;
+            document.getElementById("nikIstri").value = item.nikIstri;
+            document.getElementById("tglLahirIstri").value = item.tglLahirIstri;
+            document.getElementById("umurIstri").value = item.umurIstri;
+            document.getElementById("jumlahAnak").value = item.jumlahAnak;
+            document.getElementById("statusKb").value = item.statusKb;
+            document.getElementById("bulan").value = item.bulan;
+
+            editIndex = index; // Simpan indeks data yang sedang diedit
+        }
+
+        function clearForm() {
+            document.getElementById("namaSuami").value = "";
+            document.getElementById("nikSuami").value = "";
+            document.getElementById("namaIstri").value = "";
+            document.getElementById("nikIstri").value = "";
+            document.getElementById("tglLahirIstri").value = "";
+            document.getElementById("umurIstri").value = "";
+            document.getElementById("jumlahAnak").value = "";
+            document.getElementById("statusKb").value = "";
+            document.getElementById("bulan").value = "";
+        }
+
+        function loadData() {
+            const kelurahan = document.getElementById("kelurahan").value;
+            const rw = document.getElementById("rw").value;
+            const rt = document.getElementById("rt").value;
+            const storageKey = `${kelurahan}/${rw}/${rt}`;
+            const data = JSON.parse(localStorage.getItem(storageKey)) || [];
+
+            const dataTableBody = document.getElementById("dataTable").getElementsByTagName("tbody")[0];
+            dataTableBody.innerHTML = "";
+
+            if (data.length === 0) {
+                const row = dataTableBody.insertRow();
+                const cell = row.insertCell();
+                cell.colSpan = 10;
+                cell.textContent = "Tidak ada data untuk RT ini.";
+                return;
+            }
+
+            data.forEach((item, index) => {
+                const row = dataTableBody.insertRow();
+                row.insertCell().textContent = item.namaSuami;
+                row.insertCell().textContent = item.nikSuami;
+                row.insertCell().textContent = item.namaIstri;
+                row.insertCell().textContent = item.nikIstri;
+                row.insertCell().textContent = item.tglLahirIstri;
+                row.insertCell().textContent = item.umurIstri;
+                row.insertCell().textContent = item.jumlahAnak;
+                row.insertCell().textContent = item.statusKb;
+                row.insertCell().textContent = item.bulan;
+                const editCell = row.insertCell();
+                editCell.innerHTML = `<button onclick="editData(${index})">Edit</button>`;
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", updateRWOptions);
+    </script>
+
+</body>
+</html>
